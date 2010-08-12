@@ -6,18 +6,16 @@ import java.io.IOException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Ruby installation paths.
+ * Ruby installation paths, managed by rvm.
  * @author David Calavera
  *
  */
 public final class RubyInstallation {
   private final String name;
-  private final String path;  
   
   @DataBoundConstructor
-  public RubyInstallation(String name, String path) {
+  public RubyInstallation(String name) {
     this.name = name;
-    this.path = path;    
   }
   
   public String getName() {
@@ -25,7 +23,7 @@ public final class RubyInstallation {
   }
   
   public String getPath() {
-    return path;
+    return "/dev/null";
   }
   
   public File getExecutable() {
