@@ -17,55 +17,26 @@ import hudson.plugins.rake.RubyInstallation;
  */
 public class Util {
   
-  public static File getRvmPath() {
-    String[] pathsToCheck = new String[]{
-      Rake.DESCRIPTOR.getRvmPath(),
-      System.getenv("rvm_path"),
-      System.getProperty("user.home") + "/.rvm",
-      "/usr/local/rvm"
-    };
-    for(String envPath : pathsToCheck) {
-      if(envPath == null) continue;
-      File currentFile = new File(envPath);
-      if(currentFile.isDirectory()) return currentFile;
-    }
-    return null;
-  }
-
-  public static Collection<String> getRvmRubies() {
-    Collection<String> rubyStrings = new LinkedHashSet<String>();
-    File file = getRvmPath();
-    for(File f : file.listFiles())
-      rubyStrings.add(f.getName());
-    return rubyStrings;
+  public static String expandPath(String s) {
+    s = hudson.Util.fixNull(s).trim();
+    if(s.equals("")) return s;
+    return s.replaceFirst("^~\\/", System.getProperty("user.home") + "/");
   }
   
-  public static Collection<RubyInstallation> getRubyInstallations() {
-    Collection<RubyInstallation> installations = new LinkedHashSet<RubyInstallation>();
-    for(String rubyString : getRvmRubies())
-      installations.add(new RubyInstallation(rubyString));
-    return installations;
-  }
-
-  public static boolean isValidRubyString(String rvmRubyString) {
-    File wrapperDir = getRvmWrapperDirFor(rvmRubyString);
-    return wrapperDir != null && wrapperDir.isDirectory() && new File(wrapperDir, "rake").exists();
-  }
-
-  public static File getRvmWrapperDirFor(String rvmRubyString) {
-    return new File(getRvmPath(), "wrappers/" + rvmRubyString);
+  public static String[] getRakeCommandForRubyString(String rubyString, String... rakeArgs) {
+    String[] args = new String[5 + rakeArgs.length];
+    args[0] = "rvm";
+    args[1] = "--with-rubies";
+    args[2] = rubyString;
+    args[3] = "exec";
+    args[4] = "rake";
+    for(int i = 0; i < rakeArgs.length; i++) args[i + 4] = rakeArgs[i];
+    return args;
   }
   
-  public static File getExecutable(File f) {
-    return f == null ? f : new File(f, "rake");
-  }
-
-  public static boolean isValidRvmPathValue(String value) {
-    File f = new File(value);
-    // Check null data first.
-    if(value == null || value.equals("")) return true;
-    // Otherwise, check if it is a valid path (namely, has a wrappers dir)
-    return f.isDirectory() && new File(f, "wrappers").isDirectory();
+  public static String normalizeRubyString(String s) {
+    String normalized = hudson.Util.fixNull(s).trim();
+    return normalized.equals("") ? "default" : normalized;
   }
   
 }

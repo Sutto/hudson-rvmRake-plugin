@@ -1,7 +1,6 @@
 package hudson.plugins.rake;
 
-import static hudson.plugins.rake.Util.isValidRvmPathValue;
-import static hudson.plugins.rake.Util.getRubyInstallations;
+import static hudson.plugins.rake.Util.getRakeCommandForRubyString;
 
 import hudson.CopyOnWrite;
 import hudson.Extension;
@@ -39,7 +38,7 @@ public class Rake extends Builder {
 
   @Extension
   public static final RakeDescriptor DESCRIPTOR = new RakeDescriptor();
-  private final String  rakeInstallation;
+  private final String  rubyString;
   private final String  rakeFile;
   private final String  rakeLibDir;
   private final String  rakeWorkingDir;
@@ -47,27 +46,18 @@ public class Rake extends Builder {
   private final boolean silent;
   
   @DataBoundConstructor
-  public Rake(String rakeInstallation, String rakeFile, String tasks, String rakeLibDir, String rakeWorkingDir, boolean silent) {
-    this.rakeInstallation = rakeInstallation;
-    this.rakeFile = rakeFile;
-    this.tasks = tasks;
-    this.rakeLibDir = rakeLibDir;
+  public Rake(String rubyString, String rakeFile, String tasks, String rakeLibDir, String rakeWorkingDir, boolean silent) {
+    this.rubyString     = rubyString;
+    this.rakeFile       = rakeFile;
+    this.tasks          = tasks;
+    this.rakeLibDir     = rakeLibDir;
     this.rakeWorkingDir = rakeWorkingDir;
-    this.silent = silent;
-  }
-  
-  private RubyInstallation getRake() {
-    for (RubyInstallation rake : getDescriptor().getInstallations()) {
-      if (rakeInstallation != null && rake.getName().equals(rakeInstallation)) {
-        return rake;
-      }
-    }
-    return null;
+    this.silent         = silent;
   }
 
   private Launcher getLastBuiltLauncher(AbstractBuild build, Launcher launcher, BuildListener listener) {
-      AbstractProject project = build.getProject();
-      Node lastBuiltOn = project.getLastBuiltOn();
+      AbstractProject project    = build.getProject();
+      Node lastBuiltOn           = project.getLastBuiltOn();
       Launcher lastBuiltLauncher = launcher;
       if (lastBuiltOn != null)
         lastBuiltLauncher = lastBuiltOn.createLauncher(listener);
@@ -79,36 +69,22 @@ public class Rake extends Builder {
     ArgumentListBuilder args   = new ArgumentListBuilder();
     String normalizedTasks     = tasks.replaceAll("[\t\r\n]+"," ");        
     Launcher lastBuiltLauncher = getLastBuiltLauncher(build, launcher, listener);
-    RubyInstallation rake      = getRake();
-    if (rake != null) {          
-      File exec = rake.getExecutable();
-      if(!exec.exists()) {
-        listener.fatalError(exec + " doesn't exist");
-        return false;
-      }
-      args.add(exec.getPath());
-    } else {
-      // Use the default ruby from the environment
-      args.add("rake");
-    }        
     
-    if (rakeFile != null && rakeFile.length() > 0) {
+    // Get the generated command for rvm exec.
+    for(String command : getRakeCommandForRubyString(rubyString))
+      args.add(command);
+    
+    if (rakeFile != null && rakeFile.length() > 0)
       args.add("--rakefile", rakeFile);
-    }
-    
-    if (rakeLibDir != null && rakeLibDir.length() > 0) {
+    if (rakeLibDir != null && rakeLibDir.length() > 0)
       args.add("--libdir", rakeLibDir);
-    }
-    
-    if (silent) {
+    if (silent)
       args.add("--silent");
-    }
 
     FilePath workingDir = build.getModuleRoot();
 
-    if (rakeWorkingDir != null && rakeWorkingDir.length() > 0) {
+    if (rakeWorkingDir != null && rakeWorkingDir.length() > 0)
       workingDir = new FilePath(build.getModuleRoot(), rakeWorkingDir);
-    }
 
     args.addTokenized(normalizedTasks);
     
@@ -127,8 +103,8 @@ public class Rake extends Builder {
     return DESCRIPTOR;
   }
     
-  public String getRakeInstallation() {
-    return rakeInstallation;
+  public String getRubyString() {
+    return rubyString;
   }
     
   public String getRakeFile() {
@@ -152,21 +128,14 @@ public class Rake extends Builder {
   }
 
   public static final class RakeDescriptor extends Descriptor<Builder> {  
-      
-    @CopyOnWrite private volatile String rvm_path = null;
     
     private RakeDescriptor() {
       super(Rake.class);
       load();
     }
-      
-    @Override
-    public synchronized void load() {
-      super.load();
-    }
 
     public String getDisplayName() {
-      return "Invoke Rake";
+      return "Invoke Rake (via RVM)";
     }
         
     @Override
@@ -177,32 +146,6 @@ public class Rake extends Builder {
     @Override
     public String getHelpFile() {
       return "/plugin/rake/help.html";
-    }
-
-    @Override
-    public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-      if(formData != null && formData.has("rake.rvm_path"))
-        rvm_path = formData.getString("rake.rvm_path");
-      else
-        rvm_path = null;
-      save();      
-      return true;
-    }
-    
-    public String getRvmPath() {
-      return isValidRvmPathValue(rvm_path) ? null : rvm_path;
-    }
-    
-    public Collection<RubyInstallation> getInstallations() {
-      return getRubyInstallations();
-    }
-    
-    public FormValidation doCheckRvmPath(@QueryParameter final String value) {
-      if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER)) return FormValidation.ok();
-      if(!isValidRvmPathValue(value)) {
-        return FormValidation.error(value + " is not a valid rvm directory");
-      }
-      return FormValidation.ok();
     }
   }  
 }

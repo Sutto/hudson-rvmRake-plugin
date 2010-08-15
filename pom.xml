@@ -4,20 +4,24 @@
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
     <version>1.319</version>
-    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>rake</artifactId>
   <version>1.7-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson Rake plugin</name>
-  <url>http://wiki.hudson-ci.org/display/HUDSON/Rake+Plugin</url>
+  <url>http://github.com/Sutto/hudson-rake-plugin-with-rvm</url>
   
   <developers>
     <developer>
       <id>david_calavera</id>
       <name>David Calavera</name>
       <email>calavera@apache.org</email>
+    </developer>
+    <developer>
+      <id>sutto</id>
+      <name>Darcy Laycock</name>
+      <email>sutto@sutto.net</email>
     </developer>
   </developers>
 

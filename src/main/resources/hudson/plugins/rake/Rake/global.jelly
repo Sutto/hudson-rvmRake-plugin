@@ -1,7 +1,0 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:section title="RVM Rake">
-   <f:entry title="Full RVM Directory Path">
-      <f:textbox name="rake.rvm_path" value="${rake.rvm_path}" checkUrl="'builder/Rake/checkRvmPath?value='+escape(this.value)" />
-    </f:entry>
-  </f:section>
-</j:jelly>
