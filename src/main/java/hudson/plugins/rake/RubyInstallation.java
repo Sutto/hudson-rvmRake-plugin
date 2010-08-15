@@ -6,8 +6,10 @@ import java.io.IOException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Ruby installation paths, managed by rvm.
+ * A Ruby Installation Name.
+ *
  * @author David Calavera
+ * @author Darcy Laycock
  *
  */
 public final class RubyInstallation {
@@ -22,8 +24,8 @@ public final class RubyInstallation {
     return name;
   }
   
-  public String getPath() {
-    return "/dev/null";
+  public File getPath() {
+    return Util.getRvmWrapperDirFor(name);
   }
   
   public File getExecutable() {

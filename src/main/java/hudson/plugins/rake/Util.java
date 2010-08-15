@@ -6,18 +6,20 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
+
+import hudson.plugins.rake.RubyInstallation;
 
 /**
  * Ruby utility class. It's used to detect ruby local installations among other features.
  * 
  * @author David Calavera
+ * @author Darcy Laycock 
  */
 public class Util {
-
-  public static File getRVMPath() {
+  
+  public static File getRvmPath() {
     String[] pathsToCheck = new String[]{
+      Rake.DESCRIPTOR.getRvmPath(),
       System.getenv("rvm_path"),
       System.getProperty("user.home") + "/.rvm",
       "/usr/local/rvm"
@@ -25,73 +27,45 @@ public class Util {
     for(String envPath : pathsToCheck) {
       if(envPath == null) continue;
       File currentFile = new File(envPath);
-      if(envPath.isDirectory()) return currentFile();
+      if(currentFile.isDirectory()) return currentFile;
     }
     return null;
   }
 
-  public static Collection<String> getRVMRubies() {
-    return null;
+  public static Collection<String> getRvmRubies() {
+    Collection<String> rubyStrings = new LinkedHashSet<String>();
+    File file = getRvmPath();
+    for(File f : file.listFiles())
+      rubyStrings.add(f.getName());
+    return rubyStrings;
+  }
+  
+  public static Collection<RubyInstallation> getRubyInstallations() {
+    Collection<RubyInstallation> installations = new LinkedHashSet<RubyInstallation>();
+    for(String rubyString : getRvmRubies())
+      installations.add(new RubyInstallation(rubyString));
+    return installations;
   }
 
   public static boolean isValidRubyString(String rvmRubyString) {
-    File wrapperDir = getRVMWrapperDirFor(rvmRubyString);
+    File wrapperDir = getRvmWrapperDirFor(rvmRubyString);
     return wrapperDir != null && wrapperDir.isDirectory() && new File(wrapperDir, "rake").exists();
   }
 
   public static File getRvmWrapperDirFor(String rvmRubyString) {
-    return new File(getRVMPath(), "wrappers/" + rvmRubyString);
-  }
-
-  public static Collection<File> getRubyInstallations() throws IOException {
-    String rvmPath = System.getenv("rvm_path");
-    
-    Collection<File> rubyVersions = new LinkedHashSet<File>();
-    
-    if (systemPath != null) {
-      Set<String> candidates = new LinkedHashSet<String>(Arrays.asList(systemPath.split(File.pathSeparator)));
-      for (String path : candidates) {
-        for (String ruby : RUBY_EXECUTABLES) {
-          File rubyExec = getExecutableWithExceptions(path, ruby);
-          if (rubyExec.isFile() && 
-              !rubyVersions.contains(rubyExec.getCanonicalFile().getParentFile())) {
-            File parent = rubyExec.getCanonicalFile().getParentFile();
-            File[] gemsDir = getGemsDir(parent.getCanonicalPath());
-            
-            if (!isRakeInstalled(gemsDir) && (isMac() || isJruby(parent.getParent()))) {
-              parent = parent.getParentFile();
-              gemsDir = getGemsDir(parent.getAbsolutePath());
-            }
-            
-            if (gemsDir != null && isRakeInstalled(gemsDir)) {
-              rubyVersions.add(parent);
-            }
-          }
-        }
-      }
-    }
-    
-    return rubyVersions;
+    return new File(getRvmPath(), "wrappers/" + rvmRubyString);
   }
   
-  public static RubyInstallation[] getCanonicalRubies(RubyInstallation[] currentInstallations) {
-    try {
-      Collection<File> rubies = getRubyInstallations();
-      Collection<RubyInstallation> currentList = new LinkedHashSet<RubyInstallation>(Arrays.asList(currentInstallations));
-      
-      out: for (File ruby : rubies) {
-        for (RubyInstallation current : currentList) {
-          if (current.getCanonicalExecutable().equals(getExecutable(ruby.getCanonicalPath()).getCanonicalFile())) {
-            continue out;
-          }
-        }
-        currentList.add(new RubyInstallation(ruby.getName(), ruby.getCanonicalPath()));
-      }
-          
-      return currentList.toArray(new RubyInstallation[currentList.size()]);
-    } catch (IOException e) {
-      hudson.Util.displayIOException(e, null);
-    }
-    return new RubyInstallation[0];
+  public static File getExecutable(File f) {
+    return f == null ? f : new File(f, "rake");
   }
+
+  public static boolean isValidRvmPathValue(String value) {
+    File f = new File(value);
+    // Check null data first.
+    if(value == null || value.equals("")) return true;
+    // Otherwise, check if it is a valid path (namely, has a wrappers dir)
+    return f.isDirectory() && new File(f, "wrappers").isDirectory();
+  }
+  
 }

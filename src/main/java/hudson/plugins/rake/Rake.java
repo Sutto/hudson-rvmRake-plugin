@@ -1,9 +1,8 @@
 package hudson.plugins.rake;
 
-import static hudson.plugins.rake.Util.getCanonicalRubies;
-import static hudson.plugins.rake.Util.getGemsDir;
-import static hudson.plugins.rake.Util.hasGemsInstalled;
-import static hudson.plugins.rake.Util.isRakeInstalled;
+import static hudson.plugins.rake.Util.isValidRvmPathValue;
+import static hudson.plugins.rake.Util.getRubyInstallations;
+
 import hudson.CopyOnWrite;
 import hudson.Extension;
 import hudson.FilePath;
@@ -21,6 +20,7 @@ import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 
 import net.sf.json.JSONObject;
 
@@ -32,17 +32,18 @@ import org.kohsuke.stapler.StaplerRequest;
  * Rake plugin main class.
  * 
  * @author David Calavera
+ * @author Darcy Laycock
  */
 @SuppressWarnings({"unchecked", "serial"})
 public class Rake extends Builder {
 
   @Extension
   public static final RakeDescriptor DESCRIPTOR = new RakeDescriptor();
-  private final String rakeInstallation;
-  private final String rakeFile;
-  private final String rakeLibDir;
-  private final String rakeWorkingDir;
-  private final String tasks;
+  private final String  rakeInstallation;
+  private final String  rakeFile;
+  private final String  rakeLibDir;
+  private final String  rakeWorkingDir;
+  private final String  tasks;
   private final boolean silent;
   
   @DataBoundConstructor
@@ -75,10 +76,10 @@ public class Rake extends Builder {
 
   @Override
   public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException {
-    ArgumentListBuilder args = new ArgumentListBuilder();
-    String normalizedTasks = tasks.replaceAll("[\t\r\n]+"," ");        
+    ArgumentListBuilder args   = new ArgumentListBuilder();
+    String normalizedTasks     = tasks.replaceAll("[\t\r\n]+"," ");        
     Launcher lastBuiltLauncher = getLastBuiltLauncher(build, launcher, listener);
-    RubyInstallation rake = getRake();
+    RubyInstallation rake      = getRake();
     if (rake != null) {          
       File exec = rake.getExecutable();
       if(!exec.exists()) {
@@ -87,7 +88,8 @@ public class Rake extends Builder {
       }
       args.add(exec.getPath());
     } else {
-      args.add(lastBuiltLauncher.isUnix()?"rake":"rake.bat");
+      // Use the default ruby from the environment
+      args.add("rake");
     }        
     
     if (rakeFile != null && rakeFile.length() > 0) {
@@ -151,8 +153,7 @@ public class Rake extends Builder {
 
   public static final class RakeDescriptor extends Descriptor<Builder> {  
       
-    @CopyOnWrite
-    private volatile RubyInstallation[] installations = new RubyInstallation[0];
+    @CopyOnWrite private volatile String rvm_path = null;
     
     private RakeDescriptor() {
       super(Rake.class);
@@ -161,8 +162,7 @@ public class Rake extends Builder {
       
     @Override
     public synchronized void load() {
-      super.load();      
-      installations = getCanonicalRubies(installations);
+      super.load();
     }
 
     public String getDisplayName() {
@@ -181,31 +181,27 @@ public class Rake extends Builder {
 
     @Override
     public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-      installations = req.bindParametersToList(RubyInstallation.class, "rake.")
-        .toArray(new RubyInstallation[0]);
+      if(formData != null && formData.has("rake.rvm_path"))
+        rvm_path = formData.getString("rake.rvm_path");
+      else
+        rvm_path = null;
       save();      
       return true;
     }
     
-    public RubyInstallation[] getInstallations() {
-      return installations;
+    public String getRvmPath() {
+      return isValidRvmPathValue(rvm_path) ? null : rvm_path;
     }
     
-    public FormValidation doCheckRubyInstallation(@QueryParameter final String value) {
+    public Collection<RubyInstallation> getInstallations() {
+      return getRubyInstallations();
+    }
+    
+    public FormValidation doCheckRvmPath(@QueryParameter final String value) {
       if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER)) return FormValidation.ok();
-      File f = new File(Util.fixNull(value));
-      if(!f.isDirectory()) {
-        return FormValidation.error(f + " is not a directory");
+      if(!isValidRvmPathValue(value)) {
+        return FormValidation.error(value + " is not a valid rvm directory");
       }
-      
-      if (!hasGemsInstalled(f.getAbsolutePath())) {
-        return FormValidation.error("It seems that ruby gems is not installed");
-      }
-              
-      if (!isRakeInstalled(getGemsDir(f.getAbsolutePath()))) {
-        return FormValidation.error("It seems that rake is not installed");
-      }                                                                      
-      
       return FormValidation.ok();
     }
   }  
