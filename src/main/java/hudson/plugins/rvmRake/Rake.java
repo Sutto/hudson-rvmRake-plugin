@@ -1,6 +1,6 @@
-package hudson.plugins.rake;
+package hudson.plugins.rvmRake;
 
-import static hudson.plugins.rake.Util.getRakeCommandForRubyString;
+import static hudson.plugins.rvmRake.Util.getRakeCommandForRubyString;
 
 import hudson.CopyOnWrite;
 import hudson.Extension;
@@ -135,7 +135,7 @@ public class Rake extends Builder {
     }
 
     public String getDisplayName() {
-      return "Invoke Rake (via RVM)";
+      return "Invoke Rake Tasks (via a RVM Ruby)";
     }
         
     @Override
@@ -145,7 +145,7 @@ public class Rake extends Builder {
         
     @Override
     public String getHelpFile() {
-      return "/plugin/rake/help.html";
+      return "/plugin/rvmRake/help.html";
     }
   }  
 }

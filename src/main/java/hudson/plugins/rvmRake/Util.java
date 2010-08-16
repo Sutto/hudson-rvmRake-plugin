@@ -1,4 +1,4 @@
-package hudson.plugins.rake;
+package hudson.plugins.rvmRake;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-
-import hudson.plugins.rake.RubyInstallation;
 
 /**
  * Ruby utility class. It's used to detect ruby local installations among other features.

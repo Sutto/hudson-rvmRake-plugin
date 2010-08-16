@@ -7,10 +7,10 @@
   </parent>
 
   <artifactId>rake</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
-  <name>Hudson Rake plugin</name>
-  <url>http://github.com/Sutto/hudson-rake-plugin-with-rvm</url>
+  <name>Hudson Rake Plugin (with RVM support)</name>
+  <url>http://github.com/Sutto/hudson-rvmRake-plugin</url>
   
   <developers>
     <developer>
