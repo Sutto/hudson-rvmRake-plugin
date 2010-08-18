@@ -6,7 +6,7 @@
     <version>1.319</version>
   </parent>
 
-  <artifactId>rake</artifactId>
+  <artifactId>rvmRake</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson Rake Plugin (with RVM support)</name>
