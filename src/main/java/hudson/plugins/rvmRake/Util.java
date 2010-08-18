@@ -21,6 +21,7 @@ public class Util {
     return s.replaceFirst("^~\\/", System.getProperty("user.home") + "/");
   }
   
+  // TODO: This should be mostly implemented by an rvm base plugin.
   public static String[] getRakeCommandForRubyString(String rubyString, String... rakeArgs) {
     String[] args = new String[5 + rakeArgs.length];
     args[0] = "rvm";
@@ -34,7 +35,7 @@ public class Util {
   
   public static String normalizeRubyString(String s) {
     String normalized = hudson.Util.fixNull(s).trim();
-    return normalized.equals("") ? "default" : normalized;
+    return normalized.equals("") ? "default-with-rvmrc" : normalized;
   }
   
 }
