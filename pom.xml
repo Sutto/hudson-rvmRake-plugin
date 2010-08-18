@@ -12,6 +12,12 @@
   <name>Hudson Rake Plugin (with RVM support)</name>
   <url>http://github.com/Sutto/hudson-rvmRake-plugin</url>
   
+  <scm>
+    <connection>scm:git:git://github.com/Sutto/hudson-rvmRake-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:Sutto/hudson-rvmRake-plugin.git</developerConnection>
+    <url>http://github.com/Sutto/hudson-rvmRake-plugin</url>
+  </scm>
+  
   <developers>
     <developer>
       <id>david_calavera</id>
