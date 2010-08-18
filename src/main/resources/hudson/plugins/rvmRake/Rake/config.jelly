@@ -1,7 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
          xmlns:t="/lib/hudson" xmlns:f="/lib/form">
    
-   	<f:entry title="Ruby Version" description="The ruby string to run the task as.">
+   	<f:entry title="RVM Ruby String" description="rvm ruby string to run rake as (e.g. 'ree@rails3') - A blank value tries to load from an .rvmrc, using your default if that is unavailable.">
 	    <f:textbox name="rake.rubyString" value="${instance.rubyString}" />
   </f:entry>
    	        
